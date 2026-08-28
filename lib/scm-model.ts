@@ -8,8 +8,8 @@ export type LeadtimeGap = {
   gap: number | null;
 };
 
-export type StockoutStatus = 'SAFE' | 'CRITICAL' | 'UNKNOWN';
-export type StockoutReason = 'NO_USAGE' | 'NO_LEADTIME' | null;
+export type StockoutStatus = 'SAFE' | 'WARNING' | 'CRITICAL' | 'CALCULATION_UNAVAILABLE';
+export type StockoutReason = 'NO_USAGE' | 'NO_LEADTIME' | 'NO_INVENTORY_DATA' | 'NO_FORECAST' | null;
 
 export type StockoutRisk = {
   itemId: string;
@@ -17,7 +17,7 @@ export type StockoutRisk = {
   supplier: string;
   currentStock: number;
   inboundQty: number;
-  availableQty: number;
+  availableQty: number | null;
   dailyUsageAvg: number | null;
   plannedLeadTime: number | null;
   stockoutDays: number | null;
@@ -31,9 +31,13 @@ export type StockoutKpi = {
   nCritical: number;
   nSafe: number;
   nUnknown: number;
+  nWarning: number;
   nWithin30d: number;
   avgStockoutDays: number | null;
 };
+export type InventoryProjection = { itemId: string; itemName: string; supplierId: string | null; period: string; beginningInventory: number | null; scheduledReceipts: number; confirmedSalesOrder: number; softAllocation: number; forecastDemand: number | null; endingProjectedInventory: number | null; stockoutPeriod: string | null; effectiveLeadTime: number | null; reasonCode: string | null };
+export type LeadtimePolicy = { supplierId: string; supplierName: string | null; country: string | null; nSamples: number | null; p50Days: number | null; p80Days: number | null; p90Days: number | null; plannedLeadTime: number | null; effectiveLeadTime: number | null; source: string; confirmedAt: string | null; confirmedReason: string | null; lastChangedAt: string | null };
+export type PurchaseRecommendation = { itemId: string; itemName: string; itemGrade: string | null; forecastQty: number | null; confirmedOrderQty: number | null; demandBasisQty: number | null; availableInventory: number | null; scheduledReceipt: number | null; safetyStock: number | null; effectiveLeadtime: number | null; stockoutDate: string | null; safetyBufferDays: number | null; requiredQty: number | null; moq: number | null; packSize: number | null; recommendedQty: number | null; recommendedOrderDate: string | null; riskStatus: string | null; calculationStatus: string; reasonCode: string | null; calculationTrace: unknown };
 
 export type ForecastSettings = {
   dataStart: string | null;
@@ -147,13 +151,13 @@ export function normalizeLeadtimeGap(row: Record<string, unknown>): LeadtimeGap 
 }
 
 function statusValue(row: Record<string, unknown>): StockoutStatus {
-  const status = String(value(row, ['risk_status', 'status', '위험상태']) ?? 'UNKNOWN').toUpperCase();
-  return status === 'SAFE' || status === 'CRITICAL' ? status : 'UNKNOWN';
+  const status = String(value(row, ['risk_status', 'status', '위험상태']) ?? 'CALCULATION_UNAVAILABLE').toUpperCase();
+  return status === 'SAFE' || status === 'WARNING' || status === 'CRITICAL' || status === 'CALCULATION_UNAVAILABLE' ? status : 'CALCULATION_UNAVAILABLE';
 }
 
 function reasonValue(row: Record<string, unknown>): StockoutReason {
   const reason = value(row, ['reason', '사유']);
-  return reason === 'NO_USAGE' || reason === 'NO_LEADTIME' ? reason : null;
+  return reason === 'NO_USAGE' || reason === 'NO_LEADTIME' || reason === 'NO_INVENTORY_DATA' || reason === 'NO_FORECAST' ? reason : null;
 }
 
 export function normalizeStockoutRisk(row: Record<string, unknown>): StockoutRisk {
@@ -163,7 +167,7 @@ export function normalizeStockoutRisk(row: Record<string, unknown>): StockoutRis
     supplier: String(value(row, ['supplier_name', 'supplier', '법인', '공급처', '공급업체명']) ?? '미정'),
     currentStock: numberValue(row, ['current_stock', 'currentStock', '현재고']) ?? 0,
     inboundQty: numberValue(row, ['inbound_qty', 'inboundQty', '입고예정']) ?? 0,
-    availableQty: numberValue(row, ['available_qty', 'availableQty', '가용수량']) ?? 0,
+    availableQty: numberValue(row, ['available_qty', 'availableQty', '가용수량']),
     dailyUsageAvg: numberValue(row, ['daily_usage_avg', 'dailyUsageAvg', '일평균사용량']),
     plannedLeadTime: numberValue(row, ['planned_lead_time', 'plannedLeadTime', '계획리드타임']),
     stockoutDays: numberValue(row, ['stockout_days', 'stockoutDays', '소진일수']),
@@ -179,6 +183,7 @@ export function normalizeStockoutKpi(row: Record<string, unknown>): StockoutKpi 
     nCritical: numberValue(row, ['n_critical', 'nCritical', '긴급품목수']) ?? 0,
     nSafe: numberValue(row, ['n_safe', 'nSafe', '안전품목수']) ?? 0,
     nUnknown: numberValue(row, ['n_unknown', 'nUnknown', '판단불가품목수']) ?? 0,
+    nWarning: numberValue(row, ['n_warning', 'nWarning', '주의품목수']) ?? 0,
     nWithin30d: numberValue(row, ['n_within_30d', 'nWithin30d', '30일이내소진수']) ?? 0,
     avgStockoutDays: numberValue(row, ['avg_stockout_days', 'avgStockoutDays', '평균소진일수']),
   };

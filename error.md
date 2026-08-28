@@ -175,3 +175,29 @@
 - 증상: 재설치 후에도 `where.exe python`이 `WindowsApps\\python.exe`만 반환.
 - 판단: 실제 설치 파일이 PATH에 등록되지 않았거나 설치 위치가 표준 경로와 다름.
 - 다음 조치: 표준 Program Files 및 LocalAppData에서 실제 `python.exe`를 검색하고, 발견된 경로를 직접 실행해 설치 상태를 확인.
+## 2026-08-28 — Stockout KPI View 집계 타입 충돌
+
+- 증상: `cannot change data type of view column "n_items" from bigint to integer`.
+- 원인: 기존 `count(*)` 집계 View 컬럼은 `bigint`인데 STEP9 View가 `integer`로 교체하려고 함.
+- 해결: `n_items`, 상태별 건수, `n_within_30d`를 기존과 동일한 `bigint`로 명시.
+## 2026-08-28 — Safety Stock 정책 JSONB 집계 오류
+
+- 증상: `function max(jsonb) does not exist`.
+- 원인: `config_value->'z_value_by_grade'` JSONB에 `max()` 집계를 적용함.
+- 해결: 활성 `service_level_z` 정책을 최신 1건 서브쿼리로 조회하도록 변경.
+## 2026-08-28 — Lead Time View에 std_days 컬럼 없음
+
+- 증상: `column le.std_days does not exist`.
+- 원인: 현재 DB의 `core.v_leadtime_effective`에는 `std_days`가 포함되어 있지 않음.
+- 해결: Lead Time 변동성 및 P50/P80/P90을 원천 통계 View인 `core.v_leadtime_stat`에서 직접 조회하도록 수정.
+## 2026-08-28 — Purchase Recommendation Lead Time 별칭 오류
+
+- 증상: `column "effective_leadtime" does not exist`.
+- 원인: 최종 SELECT에서 별칭을 컬럼처럼 중복 참조함.
+- 해결: 실제 컬럼 `effective_lead_time`에 `effective_leadtime` 별칭을 한 번만 지정.
+
+## 2026-08-28 — STEP10 Purchase Recommendation CTE 구문 오류
+
+- 증상: 최종 `select` 구문에서 `syntax error at or near "select"` 발생.
+- 원인: SQL Editor에 일부 구문만 복사되거나 CTE 이름 `required`가 환경에 따라 최종 SELECT 경계에서 모호하게 해석될 수 있었음.
+- 해결: CTE 이름을 `requirements`로 명확히 변경하고, 최종 Risk 상태는 이미 `base`에서 조회한 `risk_status`를 직접 사용하도록 수정함.

@@ -14,6 +14,8 @@ export const analysisMenu: MenuItem[] = [
   { id: 'leadtime', label: '리드타임 격차', href: '/analysis/leadtime', icon: LineChart, roles: ['USER', 'ADMIN'] },
   { id: 'stockout', label: '재고 소진 위험', href: '/analysis/stockout', icon: Boxes, roles: ['USER', 'ADMIN'] },
   { id: 'model-comparison', label: '모델 비교', href: '/analysis/model-comparison', icon: LineChart, roles: ['USER', 'ADMIN'] },
+  { id: 'inventory-projection', label: '재고 Projection', href: '/analysis/inventory-projection', icon: Boxes, roles: ['USER', 'ADMIN'] },
+  { id: 'purchase-recommendation', label: '발주 추천', href: '/analysis/purchase-recommendation', icon: ShoppingCart, roles: ['USER', 'ADMIN'] },
 ];
 
 export const adminMenu: MenuItem[] = [
@@ -24,6 +26,7 @@ export const adminMenu: MenuItem[] = [
   { id: 'admin-forecast-models', label: 'Forecast 모델', href: '/admin/forecast-models', icon: LineChart, roles: ['ADMIN'] },
   { id: 'admin-forecast-runs', label: 'Forecast 실행 이력', href: '/admin/forecast-runs', icon: LineChart, roles: ['ADMIN'] },
   { id: 'admin-backtest', label: 'Backtest 실행', href: '/admin/backtest', icon: LineChart, roles: ['ADMIN'] },
+  { id: 'admin-leadtime-policy', label: 'Lead Time 정책', href: '/admin/scm-policies/lead-time', icon: Settings2, roles: ['ADMIN'] },
 ];
 
 export function menuFor(role: MenuRole) {
