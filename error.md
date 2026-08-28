@@ -37,3 +37,27 @@
 - 증상: `lib/supabase/client.ts`에서 `Return statement is not allowed here` 컴파일 오류
 - 원인: 기존 `createClient` 반환 코드 일부가 새 함수 바깥에 남음
 - 해결: 남은 기존 반환 코드와 중복 괄호를 제거하고 `createBrowserClient` singleton만 유지
+## 2026-08-28 STEP4 빌드 오류
+
+- 증상: `components/import/file-upload-panel.tsx`에서 `Expression expected`, `Expected ';', got 'Mode'`로 Next.js 빌드 실패.
+- 원인: 데이터 종류 `<select>`가 self-closing(`/>`)으로 닫힌 뒤 옵션과 닫는 태그가 이어져 JSX 구문이 깨짐.
+- 해결: self-closing 표기를 제거하고 옵션 목록을 `<select>...</select>` 내부에 배치함.
+
+## 2026-08-28 STEP4 빌드 오류 2
+
+- 증상: `Set<string> can only be iterated through...` 타입 검사 실패.
+- 원인: 프로젝트 TypeScript target이 ES5라 Set spread를 직접 사용할 수 없음.
+- 해결: `Array.from(new Set(...))`로 변환함.
+
+## 2026-08-28 STEP4 빌드 오류 3
+
+- 증상: Supabase 타입 검사에서 한국어 컬럼 select 결과를 `Record`로 변환할 수 없음.
+- 원인: 생성된 Supabase 제네릭 타입이 해당 컬럼을 오류 응답 타입으로 추론함.
+- 해결: 서버 repository에서 조회 결과를 `unknown`을 거쳐 명시적인 record 배열로 변환함.
+
+## 2026-08-28 STEP4 테스트 오류
+
+- 증상: `npm test`에서 import validation 테스트의 `ERR_MODULE_NOT_FOUND` 발생.
+- 원인: Node의 TypeScript 테스트 실행 방식에서 새 상대 import에 확장자가 없었음.
+- 해결: 테스트 import 경로에 `.ts` 확장자를 명시함.
+- 보완: 테스트에서 연쇄 참조하는 schema/validate/types 모듈에도 확장자를 통일함.

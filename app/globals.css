@@ -1163,3 +1163,11 @@ td,
   margin-left: auto;
   opacity: 0.55;
 }
+
+.import-stack { display: grid; gap: 18px; }
+.import-controls { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 14px; }
+.import-controls label, .mapping-grid label { display: grid; gap: 6px; color: var(--muted); font-size: 11px; font-weight: 700; }
+.import-flow { margin: 15px 0; font-size: 12px; }
+.mapping-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 16px 0; }
+.import-actions { flex-wrap: wrap; align-items: center; }
+@media (max-width: 760px) { .import-controls, .mapping-grid { grid-template-columns: 1fr; } }

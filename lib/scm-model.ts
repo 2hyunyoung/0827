@@ -35,6 +35,23 @@ export type StockoutKpi = {
   avgStockoutDays: number | null;
 };
 
+export type ForecastSettings = {
+  dataStart: string | null;
+  dataEnd: string | null;
+  trainStart: string | null;
+  trainEnd: string | null;
+  testStart: string | null;
+  testEnd: string | null;
+  trainRowCount: number;
+  testRowCount: number;
+  trainWindowOk: boolean;
+  testWindowOk: boolean;
+  granularity: string;
+  policyValues: unknown;
+  outlierRules: unknown;
+  itemPolicies: unknown;
+};
+
 function value(row: Record<string, unknown>, keys: string[]) {
   for (const key of keys) {
     if (row[key] !== undefined && row[key] !== null && row[key] !== '') return row[key];
@@ -96,5 +113,25 @@ export function normalizeStockoutKpi(row: Record<string, unknown>): StockoutKpi 
     nUnknown: numberValue(row, ['n_unknown', 'nUnknown', '판단불가품목수']) ?? 0,
     nWithin30d: numberValue(row, ['n_within_30d', 'nWithin30d', '30일이내소진수']) ?? 0,
     avgStockoutDays: numberValue(row, ['avg_stockout_days', 'avgStockoutDays', '평균소진일수']),
+  };
+}
+
+export function normalizeForecastSettings(row: Record<string, unknown>): ForecastSettings {
+  const date = (keys: string[]) => String(value(row, keys) ?? '') || null;
+  return {
+    dataStart: date(['data_start', 'dataStart']),
+    dataEnd: date(['data_end', 'dataEnd']),
+    trainStart: date(['train_start', 'trainStart']),
+    trainEnd: date(['train_end', 'trainEnd']),
+    testStart: date(['test_start', 'testStart']),
+    testEnd: date(['test_end', 'testEnd']),
+    trainRowCount: numberValue(row, ['train_row_count', 'trainRowCount']) ?? 0,
+    testRowCount: numberValue(row, ['test_row_count', 'testRowCount']) ?? 0,
+    trainWindowOk: value(row, ['train_window_ok', 'trainWindowOk']) === true,
+    testWindowOk: value(row, ['test_window_ok', 'testWindowOk']) === true,
+    granularity: String(value(row, ['granularity']) ?? '미설정'),
+    policyValues: value(row, ['policy_values', 'policyValues']) ?? [],
+    outlierRules: value(row, ['outlier_rules', 'outlierRules']) ?? [],
+    itemPolicies: value(row, ['item_policies', 'itemPolicies']) ?? [],
   };
 }

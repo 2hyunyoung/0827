@@ -28,4 +28,5 @@
 .ui-alert-row.critical { background: var(--pale-red); color: #ae3a37; }
 .ui-insight-banner { display: flex; gap: 12px; align-items: flex-start; padding: 13px 14px; border-radius: var(--radius-md); background: var(--pale-blue); color: #305d9c; font-size: 12px; line-height: 1.55; }
 .ui-insight-banner strong { display: block; margin-bottom: 2px; }
+.settings-json { max-height: 240px; overflow: auto; margin: 0; padding: 12px; border-radius: var(--radius-md); background: var(--color-surface-subtle); color: var(--color-text-muted); font-size: 11px; line-height: 1.55; white-space: pre-wrap; }
 @media (max-width: 760px) { .ui-data-table { min-width: 760px; } }

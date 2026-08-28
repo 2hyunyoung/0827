@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizeLeadtimeGap } from './scm-model.ts';
+import { normalizeForecastSettings, normalizeLeadtimeGap } from './scm-model.ts';
 
 test('normalizes analytics leadtime rows into the screen model', () => {
   const result = normalizeLeadtimeGap({
@@ -52,4 +52,18 @@ test('reads the real analytics.v_leadtime_gap column names', () => {
     p80: 33,
     gap: 8,
   });
+});
+
+test('keeps forecast boundaries configurable and preserves unavailable dates', () => {
+  const result = normalizeForecastSettings({
+    data_start: '2025-01-01', data_end: '2026-06-30',
+    train_start: null, train_end: null, test_start: null, test_end: null,
+    train_row_count: 0, test_row_count: 0,
+    train_window_ok: false, test_window_ok: false,
+    granularity: 'DAILY', policy_values: [], outlier_rules: [], item_policies: [],
+  });
+  assert.equal(result.trainStart, null);
+  assert.equal(result.testEnd, null);
+  assert.equal(result.trainWindowOk, false);
+  assert.equal(result.granularity, 'DAILY');
 });

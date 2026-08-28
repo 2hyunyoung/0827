@@ -162,3 +162,24 @@ Project Settings → API → Data API → Exposed schemas
 이 설정이 없으면 조회 결과가 **에러 없이 빈 배열**로 나옵니다.
 
 조회 함수는 `lib/scm.ts` 에 모읍니다. 화면에서 supabase 를 직접 부르지 않습니다.
+
+---
+
+## STEP3 — Forecast 데이터 격리
+
+### raw 신규 입력 테이블
+
+`raw.business_event`, `raw.sales_order`, `raw.item_substitute`를 사용합니다. 기존 raw 입력 테이블과 신규 테이블에는 `batch_id`, `source_type`, `loaded_at`, `source_record_id` 적재 추적 컬럼이 있습니다.
+
+### core 정책·설정
+
+- `policy_config`: 서비스 수준, 검토 기간, 안전 버퍼 등 운영 정책
+- `outlier_rule`: 프로젝트·반품·중복 및 학습 제외 규칙
+- `item_policy`: 품목별 MOQ, 포장 단위, 등급, 서비스 수준
+- `forecast_setting`: `train_start`, `train_end`, `test_start`, `test_end`, `granularity`
+
+### 학습/검증 경계
+
+Forecast와 Demand Profile은 `core.v_train_demand`만 사용하고, Backtest scoring은 `core.v_test_actual`만 사용합니다. 날짜 경계는 `core.forecast_setting`에서 읽으며 코드에 고정하지 않습니다.
+
+`analytics.v_data_coverage`에서 실제 데이터 범위, 설정 범위, train/test 행 수와 `train_window_ok`, `test_window_ok`를 확인할 수 있습니다. 관리자 확인 화면은 `analytics.v_forecast_settings`를 조회합니다.

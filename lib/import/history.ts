@@ -1,0 +1,5 @@
+import 'server-only';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
+export async function getImportHistory() { const supabase = await createSupabaseServerClient(); const { data, error } = await supabase.schema('analytics').from('v_import_history').select('*').order('uploaded_at', { ascending: false }).limit(100); if (error) throw new Error(error.message); return data ?? []; }
+export async function getValidationErrors(batchId: string) { const supabase = await createSupabaseServerClient(); const [{ data: errors, error }, { data: staging, error: stagingError }] = await Promise.all([supabase.schema('core').from('validation_error').select('*').eq('batch_id', batchId).order('row_number'), supabase.schema('core').from('import_staging').select('row_number,original_record').eq('batch_id', batchId).order('row_number')]); if (error || stagingError) throw new Error(error?.message ?? stagingError?.message ?? 'ERROR_QUERY_FAILED'); return { errors: errors ?? [], staging: staging ?? [] }; }
+
