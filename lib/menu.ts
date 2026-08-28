@@ -16,6 +16,7 @@ export const analysisMenu: MenuItem[] = [
 ];
 
 export const adminMenu: MenuItem[] = [
+  { id: 'admin-users', label: '사용자 관리', href: '/admin/users', icon: Settings2, roles: ['ADMIN'] },
   { id: 'admin-master', label: '기준정보 관리', href: '/admin/master', icon: Settings2, roles: ['ADMIN'] },
 ];
 

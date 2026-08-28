@@ -8,9 +8,9 @@ import Link from 'next/link';
 import AnalysisTabs from '@/components/analysis/analysis-tabs';
 import Sidebar from '@/components/shell/sidebar';
 import Topbar from '@/components/shell/topbar';
+import { getRole } from '@/lib/auth';
 
-export default function AnalysisLayout({ children }: { children: ReactNode }) {
-  return (
-    <div className="system-shell"><Sidebar /><main className="system-main"><Topbar title="분석" /><header className="analysis-topbar"><Link href="/" className="analysis-home">← 전체 현황</Link><AnalysisTabs /></header>{children}</main></div>
-  );
+export default async function AnalysisLayout({ children }: { children: ReactNode }) {
+  const role = (await getRole()) ?? 'USER';
+  return <div className="system-shell"><Sidebar role={role} /><main className="system-main"><Topbar title="분석" /><header className="analysis-topbar"><Link href="/" className="analysis-home">← 전체 현황</Link><AnalysisTabs /></header>{children}</main></div>;
 }
