@@ -72,6 +72,46 @@ export type SkuDemandProfile = {
 };
 export type DemandProfileKpi = { totalItems: number; nSmooth: number; nIntermittent: number; nErratic: number; nLumpy: number; nCrostonNeeded: number; nCalculationUnavailable: number };
 
+export type ForecastModelConfig = {
+  modelId: string;
+  modelName: string;
+  family: string;
+  engine: string;
+  version: string;
+  enabled: boolean;
+  isDefault: boolean;
+  applicableDemandType: DemandType[];
+  parameters: Record<string, unknown>;
+  description: string | null;
+  updatedAt: string | null;
+};
+
+export type ForecastRun = {
+  runId: string;
+  status: 'RUNNING' | 'SUCCESS' | 'FAILED';
+  granularity: string;
+  trainStart: string;
+  trainEnd: string;
+  horizon: number;
+  championMetric: string | null;
+  dataSnapshotAt: string;
+  models: unknown;
+  nModels: number;
+  nItems: number;
+  nRows: number;
+  startedAt: string | null;
+  finishedAt: string | null;
+  durationMs: number | null;
+  triggeredEmail: string | null;
+  note: string | null;
+  message: string | null;
+  isStale: boolean;
+};
+
+export type ForecastRunKpi = { runId: string; nModels: number; nItems: number; nRows: number; nCalculated: number; nCalculationUnavailable: number };
+export type ModelPerformance = { backtestRunId: string; runId: string; modelId: string; modelVersion: string | null; itemId: string; nPeriods: number; wape: number | null; mape: number | null; bias: number | null; rmse: number | null; mae: number | null; baselineImprovement: number | null; rank: number | null; calculationStatus: string; reasonCode: string | null };
+export type ModelComparisonRow = ModelPerformance & { period: string; predictedQty: number | null; actualQty: number | null; p50: number | null; p80: number | null; p90: number | null; isChampion: boolean };
+
 function value(row: Record<string, unknown>, keys: string[]) {
   for (const key of keys) {
     if (row[key] !== undefined && row[key] !== null && row[key] !== '') return row[key];
@@ -163,3 +203,58 @@ export function normalizeForecastSettings(row: Record<string, unknown>): Forecas
     itemPolicies: value(row, ['item_policies', 'itemPolicies']) ?? [],
   };
 }
+
+function demandTypes(value: unknown): DemandType[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is DemandType => item === 'SMOOTH' || item === 'INTERMITTENT' || item === 'ERRATIC' || item === 'LUMPY');
+}
+
+export function normalizeForecastModel(row: Record<string, unknown>): ForecastModelConfig {
+  const text = (keys: string[]) => String(value(row, keys) ?? '') || null;
+  const parameters = value(row, ['parameters']);
+  return {
+    modelId: String(value(row, ['model_id', 'modelId']) ?? '미정'),
+    modelName: String(value(row, ['model_name', 'modelName']) ?? '미정'),
+    family: String(value(row, ['family']) ?? '미정'),
+    engine: String(value(row, ['engine']) ?? 'SQL_BASELINE'),
+    version: String(value(row, ['version']) ?? '미정'),
+    enabled: value(row, ['enabled']) === true,
+    isDefault: value(row, ['is_default', 'isDefault']) === true,
+    applicableDemandType: demandTypes(value(row, ['applicable_demand_type', 'applicableDemandType'])),
+    parameters: parameters && typeof parameters === 'object' && !Array.isArray(parameters) ? parameters as Record<string, unknown> : {},
+    description: text(['description']),
+    updatedAt: text(['updated_at', 'updatedAt']),
+  };
+}
+
+export function normalizeForecastRun(row: Record<string, unknown>): ForecastRun {
+  const status = String(value(row, ['status']) ?? 'FAILED');
+  return {
+    runId: String(value(row, ['run_id', 'runId']) ?? '미정'),
+    status: status === 'RUNNING' || status === 'SUCCESS' ? status : 'FAILED',
+    granularity: String(value(row, ['granularity']) ?? '미정'),
+    trainStart: String(value(row, ['train_start']) ?? ''),
+    trainEnd: String(value(row, ['train_end']) ?? ''),
+    horizon: numberValue(row, ['horizon']) ?? 0,
+    championMetric: String(value(row, ['champion_metric']) ?? '') || null,
+    dataSnapshotAt: String(value(row, ['data_snapshot_at']) ?? ''),
+    models: value(row, ['models']) ?? [],
+    nModels: numberValue(row, ['n_models']) ?? 0,
+    nItems: numberValue(row, ['n_items']) ?? 0,
+    nRows: numberValue(row, ['n_rows']) ?? 0,
+    startedAt: String(value(row, ['started_at']) ?? '') || null,
+    finishedAt: String(value(row, ['finished_at']) ?? '') || null,
+    durationMs: numberValue(row, ['duration_ms']),
+    triggeredEmail: String(value(row, ['triggered_email']) ?? '') || null,
+    note: String(value(row, ['note']) ?? '') || null,
+    message: String(value(row, ['message']) ?? '') || null,
+    isStale: value(row, ['is_stale']) === true,
+  };
+}
+
+export function normalizeForecastRunKpi(row: Record<string, unknown>): ForecastRunKpi {
+  return { runId: String(value(row, ['run_id']) ?? '미정'), nModels: numberValue(row, ['n_models']) ?? 0, nItems: numberValue(row, ['n_items']) ?? 0, nRows: numberValue(row, ['n_rows']) ?? 0, nCalculated: numberValue(row, ['n_calculated']) ?? 0, nCalculationUnavailable: numberValue(row, ['n_calculation_unavailable']) ?? 0 };
+}
+
+export function normalizeModelPerformance(row: Record<string, unknown>): ModelPerformance { return { backtestRunId: String(value(row, ['backtest_run_id']) ?? ''), runId: String(value(row, ['run_id']) ?? ''), modelId: String(value(row, ['model_id']) ?? ''), modelVersion: String(value(row, ['model_version']) ?? '') || null, itemId: String(value(row, ['item_id']) ?? ''), nPeriods: numberValue(row, ['n_periods']) ?? 0, wape: numberValue(row, ['wape']), mape: numberValue(row, ['mape']), bias: numberValue(row, ['bias']), rmse: numberValue(row, ['rmse']), mae: numberValue(row, ['mae']), baselineImprovement: numberValue(row, ['baseline_improvement']), rank: numberValue(row, ['rank']), calculationStatus: String(value(row, ['calculation_status']) ?? 'CALCULATION_UNAVAILABLE'), reasonCode: String(value(row, ['reason_code']) ?? '') || null }; }
+export function normalizeModelComparison(row: Record<string, unknown>): ModelComparisonRow { return { ...normalizeModelPerformance(row), period: String(value(row, ['period']) ?? ''), predictedQty: numberValue(row, ['predicted_qty']), actualQty: numberValue(row, ['actual_qty']), p50: numberValue(row, ['p50']), p80: numberValue(row, ['p80']), p90: numberValue(row, ['p90']), isChampion: value(row, ['is_champion']) === true }; }

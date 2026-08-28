@@ -114,3 +114,17 @@
 - 확인: Supabase Auth endpoint와 publishable key의 HTTPS 점검은 성공했으며, `/api/auth/login`은 401을 반환함.
 - 원인 후보: 현재 실행 중인 Node 개발 서버의 외부 fetch 환경 문제 또는 Supabase가 반환한 인증 실패가 `fetch failed`로 전달되는 경우.
 - 해결: 서버 로그인 실패 메시지가 `fetch failed`인 경우 브라우저 Supabase client로 재시도하고, 그 결과의 실제 인증 오류를 화면에 표시하도록 fallback을 추가함.
+## 2026-08-28 — STEP7 차트 wrapper Set 순회 빌드 오류
+
+- 증상: `Type 'Set<string>' can only be iterated through when using the '--downlevelIteration' flag` 오류로 `npm.cmd run build` 실패.
+- 원인: 프로젝트 TypeScript target에서 Set spread 순회를 지원하지 않음.
+- 해결: `Array.from(new Set(...))`로 변환해 동일한 모델 목록을 호환 방식으로 생성.
+## 2026-08-28 — STEP7 차트 기간 목록 Set 순회 오류
+
+- 증상: `components/chart/forecast-overlay-chart.tsx`의 `Set` spread에서 동일한 TypeScript target 오류가 재발.
+- 해결: 기간 목록도 `Array.from(new Set(...))`로 변환.
+## 2026-08-28 — Git index lock 권한 오류
+
+- 증상: `git add`/`git commit` 실행 시 `.git/index.lock: Permission denied` 발생.
+- 확인: 잔여 `index.lock` 파일과 실행 중인 Git 프로세스는 없었음.
+- 조치: 저장소 메타데이터 쓰기 권한이 필요한 작업이므로 승인된 권한으로 커밋을 재시도.

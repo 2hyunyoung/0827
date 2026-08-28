@@ -30,3 +30,8 @@
 .ui-insight-banner strong { display: block; margin-bottom: 2px; }
 .settings-json { max-height: 240px; overflow: auto; margin: 0; padding: 12px; border-radius: var(--radius-md); background: var(--color-surface-subtle); color: var(--color-text-muted); font-size: 11px; line-height: 1.55; white-space: pre-wrap; }
 @media (max-width: 760px) { .ui-data-table { min-width: 760px; } }
+.forecast-model-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
+.model-meta { display: flex; justify-content: space-between; gap: var(--space-3); font-size: 12px; }
+.model-meta span { color: var(--muted); }
+.check-label { display: flex !important; grid-template-columns: auto 1fr; align-items: center; gap: 8px !important; }
+@media (max-width: 900px) { .forecast-model-grid { grid-template-columns: 1fr; } }

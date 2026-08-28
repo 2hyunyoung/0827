@@ -12,6 +12,16 @@ import {
   normalizeDemandProfileKpi,
   type SkuDemandProfile,
   type DemandProfileKpi,
+  normalizeForecastModel,
+  normalizeForecastRun,
+  normalizeForecastRunKpi,
+  type ForecastModelConfig,
+  type ForecastRun,
+  type ForecastRunKpi,
+  normalizeModelPerformance,
+  normalizeModelComparison,
+  type ModelPerformance,
+  type ModelComparisonRow,
 } from './scm-model';
 
 export async function getDemandProfile(): Promise<{ rows: SkuDemandProfile[]; error: string | null }> { try { const supabase = await createSupabaseServerClient(); const { data, error } = await supabase.schema('analytics').from('v_sku_demand_profile').select('*').order('item_id'); if (error) return { rows: [], error: error.message }; return { rows: (data ?? []).map((row) => normalizeDemandProfile(row as Record<string, unknown>)), error: null }; } catch (error) { return { rows: [], error: error instanceof Error ? error.message : '수요 프로파일 조회에 실패했습니다.' }; } }
@@ -96,3 +106,33 @@ export async function getTestActual(): Promise<{ rows: ForecastDemandRow[]; erro
     return { rows: [], error: error instanceof Error ? error.message : '검증 데이터 조회에 실패했습니다.' };
   }
 }
+
+export async function getForecastModels(): Promise<{ rows: ForecastModelConfig[]; error: string | null }> {
+  try {
+    const supabase = await createSupabaseServerClient();
+    const { data, error } = await supabase.schema('analytics').from('v_model_config').select('*').order('model_id');
+    if (error) return { rows: [], error: error.message };
+    return { rows: (data ?? []).map((row) => normalizeForecastModel(row as Record<string, unknown>)), error: null };
+  } catch (error) { return { rows: [], error: error instanceof Error ? error.message : '모델 설정 조회에 실패했습니다.' }; }
+}
+
+export async function getForecastRuns(): Promise<{ rows: ForecastRun[]; error: string | null }> {
+  try {
+    const supabase = await createSupabaseServerClient();
+    const { data, error } = await supabase.schema('analytics').from('v_forecast_run').select('*').order('started_at', { ascending: false });
+    if (error) return { rows: [], error: error.message };
+    return { rows: (data ?? []).map((row) => normalizeForecastRun(row as Record<string, unknown>)), error: null };
+  } catch (error) { return { rows: [], error: error instanceof Error ? error.message : 'Forecast 실행 이력 조회에 실패했습니다.' }; }
+}
+
+export async function getForecastRunKpis(): Promise<{ rows: ForecastRunKpi[]; error: string | null }> {
+  try {
+    const supabase = await createSupabaseServerClient();
+    const { data, error } = await supabase.schema('analytics').from('v_forecast_run_kpi').select('*');
+    if (error) return { rows: [], error: error.message };
+    return { rows: (data ?? []).map((row) => normalizeForecastRunKpi(row as Record<string, unknown>)), error: null };
+  } catch (error) { return { rows: [], error: error instanceof Error ? error.message : 'Forecast KPI 조회에 실패했습니다.' }; }
+}
+
+export async function getModelPerformance(): Promise<{ rows: ModelPerformance[]; error: string | null }> { try { const supabase = await createSupabaseServerClient(); const { data, error } = await supabase.schema('analytics').from('v_model_performance').select('*').order('item_id').order('rank'); if (error) return { rows: [], error: error.message }; return { rows: (data ?? []).map((row) => normalizeModelPerformance(row as Record<string, unknown>)), error: null }; } catch (error) { return { rows: [], error: error instanceof Error ? error.message : '모델 성능 조회에 실패했습니다.' }; } }
+export async function getModelComparison(): Promise<{ rows: ModelComparisonRow[]; error: string | null }> { try { const supabase = await createSupabaseServerClient(); const { data, error } = await supabase.schema('analytics').from('v_model_comparison').select('*').order('item_id').order('period'); if (error) return { rows: [], error: error.message }; return { rows: (data ?? []).map((row) => normalizeModelComparison(row as Record<string, unknown>)), error: null }; } catch (error) { return { rows: [], error: error instanceof Error ? error.message : '모델 비교 조회에 실패했습니다.' }; } }
