@@ -1171,3 +1171,6 @@ td,
 .mapping-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 16px 0; }
 .import-actions { flex-wrap: wrap; align-items: center; }
 @media (max-width: 760px) { .import-controls, .mapping-grid { grid-template-columns: 1fr; } }
+.profile-toolbar { flex-wrap: wrap; margin-bottom: 10px; }
+.profile-search { flex: 1; min-width: 220px; }
+.profile-result-count { margin: 8px 0 14px; font-size: 11px; }

@@ -52,6 +52,26 @@ export type ForecastSettings = {
   itemPolicies: unknown;
 };
 
+export type DemandType = 'SMOOTH' | 'INTERMITTENT' | 'ERRATIC' | 'LUMPY';
+export type SkuDemandProfile = {
+  itemId: string;
+  itemName: string;
+  nPeriods: number;
+  nNonzeroPeriods: number;
+  adi: number | null;
+  cv: number | null;
+  cvSquared: number | null;
+  zeroDemandRate: number | null;
+  trend: number | null;
+  recentChangeRate: number | null;
+  peakPeriod: string | null;
+  demandType: DemandType | null;
+  seasonality: boolean | null;
+  reasonCode: string | null;
+  stability: string | null;
+};
+export type DemandProfileKpi = { totalItems: number; nSmooth: number; nIntermittent: number; nErratic: number; nLumpy: number; nCrostonNeeded: number; nCalculationUnavailable: number };
+
 function value(row: Record<string, unknown>, keys: string[]) {
   for (const key of keys) {
     if (row[key] !== undefined && row[key] !== null && row[key] !== '') return row[key];
@@ -65,6 +85,14 @@ function numberValue(row: Record<string, unknown>, keys: string[]) {
   const parsed = Number(raw);
   return Number.isFinite(parsed) ? parsed : null;
 }
+
+export function normalizeDemandProfile(row: Record<string, unknown>): SkuDemandProfile {
+  const text = (keys: string[]) => String(value(row, keys) ?? '') || null;
+  const demandType = text(['demand_type', 'demandType']);
+  return { itemId: String(value(row, ['item_id', 'itemId', '품목코드']) ?? '미정'), itemName: String(value(row, ['item_name', 'itemName', '품목명']) ?? '미정'), nPeriods: numberValue(row, ['n_periods', 'nPeriods']) ?? 0, nNonzeroPeriods: numberValue(row, ['n_nonzero_periods', 'nNonzeroPeriods']) ?? 0, adi: numberValue(row, ['adi']), cv: numberValue(row, ['cv']), cvSquared: numberValue(row, ['cv_squared', 'cvSquared']), zeroDemandRate: numberValue(row, ['zero_demand_rate', 'zeroDemandRate']), trend: numberValue(row, ['trend', 'trend_per_period']), recentChangeRate: numberValue(row, ['recent_change_rate', 'recentChangeRate']), peakPeriod: text(['peak_period', 'peakPeriod']), demandType: demandType === 'SMOOTH' || demandType === 'INTERMITTENT' || demandType === 'ERRATIC' || demandType === 'LUMPY' ? demandType : null, seasonality: typeof value(row, ['seasonality']) === 'boolean' ? value(row, ['seasonality']) as boolean : null, reasonCode: text(['reason_code', 'reasonCode']), stability: text(['stability']) };
+}
+
+export function normalizeDemandProfileKpi(row: Record<string, unknown>): DemandProfileKpi { return { totalItems: numberValue(row, ['total_items']) ?? 0, nSmooth: numberValue(row, ['n_smooth']) ?? 0, nIntermittent: numberValue(row, ['n_intermittent']) ?? 0, nErratic: numberValue(row, ['n_erratic']) ?? 0, nLumpy: numberValue(row, ['n_lumpy']) ?? 0, nCrostonNeeded: numberValue(row, ['n_croston_needed']) ?? 0, nCalculationUnavailable: numberValue(row, ['n_calculation_unavailable']) ?? 0 }; }
 
 export function normalizeLeadtimeGap(row: Record<string, unknown>): LeadtimeGap {
   return {

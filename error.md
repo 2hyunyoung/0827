@@ -61,3 +61,56 @@
 - 원인: Node의 TypeScript 테스트 실행 방식에서 새 상대 import에 확장자가 없었음.
 - 해결: 테스트 import 경로에 `.ts` 확장자를 명시함.
 - 보완: 테스트에서 연쇄 참조하는 schema/validate/types 모듈에도 확장자를 통일함.
+
+## 2026-08-28 — Supabase 정책 중복 오류
+
+- 증상: `policy "leadtime_plan_authenticated_select" for table "leadtime_plan" already exists` 발생.
+- 원인: `20260828000200_auth_rbac.sql`이 이미 존재하는 정책을 `create policy`로 다시 생성함.
+- 해결: 동일 정책을 생성하기 전에 `drop policy if exists`를 실행하도록 migration을 멱등적으로 수정함.
+
+## 2026-08-28 — STEP5 Demand Profile 컬럼 오류
+
+- 증상: `column "period_start" does not exist`가 `month_effect` CTE에서 발생함.
+- 원인: 내부 집계 쿼리에서 `extract(month from period_start)`를 `calendar_month`라는 별칭으로 반환했는데, 외부 쿼리가 존재하지 않는 `period_start`를 다시 참조함.
+- 해결: 외부 집계에서는 `calendar_month` 별칭을 사용하도록 STEP5 migration을 수정함.
+
+## 2026-08-28 — 로그인 실패 추가 진단
+
+- 확인: `/api/health/supabase`가 `configured: true`를 반환하고 브라우저 콘솔 오류가 없음.
+- 원인 후보: Supabase Auth 사용자 미생성, 이메일 미확인, 자격 증명 오류, 또는 `core.app_user` trigger/migration 미적용.
+- 개선: 로그인 화면에서 `Invalid login credentials`, `Email not confirmed`, rate limit 등 Supabase 오류를 구분해 표시하도록 수정함.
+- 확인 방법: Supabase Dashboard Authentication → Users에서 계정과 이메일 인증 상태를 확인하고, SQL Editor에서 `auth.users`와 `core.app_user` 매칭 및 `on_auth_user_created_app_user` trigger를 확인함.
+
+## 2026-08-28 — 로그인 성공 후 로그인 화면으로 복귀
+
+- 증상: 로그인 버튼을 누르면 잠시 `로그인 중…`이 표시된 뒤 로그인 화면으로 돌아옴.
+- 원인 추정: client-side `router.replace()`가 Supabase 브라우저 세션 쿠키의 반영 및 middleware 세션 확인보다 먼저 실행될 수 있음.
+- 해결: 인증 성공 후 안전한 내부 `next` 경로를 `window.location.assign()`으로 전체 이동해 middleware가 갱신된 세션을 다시 확인하도록 수정함.
+
+## 2026-08-28 — 브라우저 로그인 세션과 middleware 불일치
+
+- 증상: 로그인 버튼을 누르면 `로그인 중…` 후 보호 페이지를 거쳐 로그인 화면으로 돌아옴.
+- 원인: 브라우저 client가 저장한 인증 세션과 Next middleware가 요청 cookie에서 읽는 세션이 일치하지 않음.
+- 해결: `/api/auth/login` Route Handler에서 서버 Supabase client로 로그인하고 cookie session을 설정한 뒤 클라이언트가 내부 경로로 이동하도록 변경함.
+
+## 2026-08-28 — PowerShell npm 실행 정책 오류
+
+- 증상: `npm.ps1 파일을 로드할 수 없습니다. 이 시스템에서 스크립트를 실행할 수 없습니다.`
+- 원인: PowerShell Execution Policy가 `.ps1` 스크립트 실행을 차단함. 프로젝트나 Node.js 설치 오류가 아님.
+- 즉시 해결: PowerShell에서 `npm` 대신 `npm.cmd`를 사용함.
+- 대안: 필요할 때만 사용자 범위 정책을 `RemoteSigned`로 설정함.
+
+## 2026-08-28 — Next.js `.next` 생성물 누락 오류
+
+- 증상: `ENOENT: ... .next/server/pages/_document.js` 또는 App Router page bundle을 열 수 없음.
+- 원인: 여러 Next 개발/빌드 프로세스가 같은 `.next` 폴더를 동시에 갱신하면서 캐시 생성물이 부분적으로 삭제됨.
+- 해결: 실행 중인 개발 서버를 종료하고 프로젝트 내부의 생성물 `.next`를 삭제한 뒤 개발 서버를 하나만 재시작함.
+- 현재 상태: 새 서버가 `http://localhost:3003`에서 정상 기동했고 `/login`이 200으로 표시됨. 3000 포트는 별도 프로세스가 사용 중임.
+- 추가 확인: 동시 실행 상태에서 `Cannot find module './331.js'`도 발생해 `/api/auth/login`이 500 HTML을 반환했고, 클라이언트에서는 이를 `fetch failed`로 표시함.
+
+## 2026-08-28 — 로그인 API `fetch failed`
+
+- 증상: 로그인 후 `로그인 실패: fetch failed` 표시.
+- 확인: Supabase Auth endpoint와 publishable key의 HTTPS 점검은 성공했으며, `/api/auth/login`은 401을 반환함.
+- 원인 후보: 현재 실행 중인 Node 개발 서버의 외부 fetch 환경 문제 또는 Supabase가 반환한 인증 실패가 `fetch failed`로 전달되는 경우.
+- 해결: 서버 로그인 실패 메시지가 `fetch failed`인 경우 브라우저 Supabase client로 재시도하고, 그 결과의 실제 인증 오류를 화면에 표시하도록 fallback을 추가함.
