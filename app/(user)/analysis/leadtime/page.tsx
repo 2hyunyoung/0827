@@ -6,31 +6,35 @@
 // 4  components/analysis/*  껍데기와 표는 재사용
 
 import AnalysisFrame from '@/components/analysis/analysis-frame';
-import DataTable, { formatNumber, type Column } from '@/components/analysis/data-table';
+import { formatNumber } from '@/components/analysis/data-table';
 import { getLeadtimeGap } from '@/lib/scm';
 import type { LeadtimeGap } from '@/lib/scm-model';
+import KpiCard from '@/components/ui/kpi-card';
+import EmptyValue from '@/components/ui/empty-value';
+import UiDataTable, { type UiColumn } from '@/components/ui/data-table';
+import Badge from '@/components/ui/badge';
 
 export const dynamic = 'force-dynamic';
 
 function GapCell({ row }: { row: LeadtimeGap }) {
-  if (row.gap === null) return <span className="muted">—</span>;
+  if (row.gap === null) return <EmptyValue reason="NO_GAP" />;
   // 양수 = 실제가 마스터보다 길다 = 위험
-  const tone = row.gap > 0 ? 'text-danger' : 'text-good';
+  const status = row.gap > 0 ? 'WARNING' : 'SAFE';
   const sign = row.gap > 0 ? '+' : '';
-  return <span className={tone}>{sign}{formatNumber(row.gap, '일')}</span>;
+  return <span>{sign}{formatNumber(row.gap, '일')} <Badge status={status} /></span>;
 }
 
-const columns: Column<LeadtimeGap>[] = [
+const columns: UiColumn<LeadtimeGap>[] = [
   { key: 'supplier', label: '공급처' },
   { key: 'country', label: '국가' },
   { key: 'masterLeadTime', label: '마스터', align: 'right',
-    render: (r) => formatNumber(r.masterLeadTime, '일') },
+    render: (r) => r.masterLeadTime === null ? <EmptyValue reason="NO_LEADTIME" /> : formatNumber(r.masterLeadTime, '일') },
   { key: 'sampleCount', label: '표본수', align: 'right',
     render: (r) => r.sampleCount.toLocaleString() },
   { key: 'actualAverage', label: '실적평균', align: 'right',
-    render: (r) => formatNumber(r.actualAverage, '일') },
+    render: (r) => r.actualAverage === null ? <EmptyValue reason="NO_USAGE" /> : formatNumber(r.actualAverage, '일') },
   { key: 'p80', label: 'P80', align: 'right',
-    render: (r) => formatNumber(r.p80, '일') },
+    render: (r) => r.p80 === null ? <EmptyValue reason="NO_USAGE" /> : formatNumber(r.p80, '일') },
   { key: 'gap', label: '격차', align: 'right',
     render: (r) => <GapCell row={r} /> },
 ];
@@ -62,21 +66,9 @@ export default async function LeadtimePage() {
       description="마스터에 적힌 표준 리드타임과 실제 실적 P80 을 비교해, 계획이 현실보다 짧게 잡혀 있는 공급처를 찾습니다."
     >
       <div className="grid grid-3">
-        <div className="card metric">
-          <div className="metric-label">공급처</div>
-          <div className="metric-value">{nSuppliers}</div>
-          <div className="metric-foot">사용 중인 생산법인</div>
-        </div>
-        <div className="card metric">
-          <div className="metric-label">실제가 더 김</div>
-          <div className="metric-value">{nLonger}</div>
-          <div className="metric-foot warn">격차 &gt; 0 인 공급처</div>
-        </div>
-        <div className="card metric">
-          <div className="metric-label">표본 부족</div>
-          <div className="metric-value">{nLowSample}</div>
-          <div className="metric-foot">표본 10건 미만</div>
-        </div>
+        <KpiCard label="공급처" value={nSuppliers} foot="사용 중인 생산법인" />
+        <KpiCard label="실제가 더 김" value={nLonger} foot="격차 > 0 인 공급처" tone="critical" />
+        <KpiCard label="표본 부족" value={nLowSample} foot="표본 10건 미만" tone="warning" />
       </div>
 
       <div className="section card">
@@ -84,7 +76,7 @@ export default async function LeadtimePage() {
           <h3>공급처별 리드타임</h3>
           <span>격차 = P80 − 마스터</span>
         </div>
-        <DataTable
+        <UiDataTable
           columns={columns}
           rows={rows}
           rowKey={(r, i) => `${r.supplier}-${i}`}

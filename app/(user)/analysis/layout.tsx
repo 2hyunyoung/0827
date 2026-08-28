@@ -6,15 +6,11 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import AnalysisTabs from '@/components/analysis/analysis-tabs';
+import Sidebar from '@/components/shell/sidebar';
+import Topbar from '@/components/shell/topbar';
 
 export default function AnalysisLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="analysis-shell">
-      <header className="analysis-topbar">
-        <Link href="/" className="analysis-home">← 발주계획</Link>
-        <AnalysisTabs />
-      </header>
-      {children}
-    </div>
+    <div className="system-shell"><Sidebar /><main className="system-main"><Topbar title="분석" /><header className="analysis-topbar"><Link href="/" className="analysis-home">← 전체 현황</Link><AnalysisTabs /></header>{children}</main></div>
   );
 }

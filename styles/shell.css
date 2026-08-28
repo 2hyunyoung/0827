@@ -1,0 +1,13 @@
+.system-shell { min-height: 100vh; display: flex; background: var(--color-canvas); }
+.system-main { min-width: 0; flex: 1; }
+.system-content { max-width: 1440px; margin: 0 auto; padding: var(--space-8) 42px 56px; }
+.system-nav { display: grid; gap: 5px; }
+.system-nav-label { color: #7e99b6; text-transform: uppercase; letter-spacing: 1.3px; font-size: 10px; font-weight: 700; padding: 0 10px; margin: 0 0 9px; }
+.system-nav-link { display: flex; align-items: center; gap: 11px; border-radius: 10px; padding: 12px 11px; color: #c3d2e3; text-decoration: none; font-size: 13px; transition: 0.15s ease; }
+.system-nav-link:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
+.system-nav-link.active { background: var(--color-brand); color: #fff; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15); }
+.system-nav-icon { width: 22px; height: 22px; display: grid; place-items: center; }
+@media (max-width: 760px) {
+  .system-shell { display: block; }
+  .system-content { padding: 22px 18px 40px; }
+}
