@@ -1164,6 +1164,29 @@ td,
   opacity: 0.55;
 }
 
+/* 운영 콘솔 스타일: 기존 workflow 동작은 유지하고 시각 계층만 정돈합니다. */
+.app-shell { background: var(--color-canvas); }
+.app-shell > .sidebar { width: 276px; flex-basis: 276px; padding: 30px 20px; background: var(--color-brand-strong); box-shadow: 14px 0 36px rgba(16, 43, 75, 0.08); }
+.app-shell .brand { margin: 0 8px 42px; }
+.app-shell .brand-mark { width: 42px; height: 42px; border-radius: 13px; background: var(--color-brand); box-shadow: 0 8px 18px rgba(47, 111, 237, 0.25); }
+.app-shell .brand-copy strong { font-size: 16px; }
+.app-shell .brand-copy span { color: color-mix(in srgb, var(--color-surface) 58%, transparent); }
+.app-shell .nav-label { color: color-mix(in srgb, var(--color-surface) 48%, transparent); margin-bottom: 10px; }
+.app-shell .nav-button { min-height: 46px; border: 1px solid transparent; border-radius: 12px; color: color-mix(in srgb, var(--color-surface) 78%, transparent); transition: transform .18s ease, background .18s ease, color .18s ease; }
+.app-shell .nav-button:hover { transform: translateX(2px); background: color-mix(in srgb, var(--color-surface) 9%, transparent); color: var(--color-surface); }
+.app-shell .nav-button.active { background: var(--color-brand); box-shadow: 0 10px 24px rgba(47, 111, 237, .24); }
+.app-shell .nav-button.active .nav-number { background: color-mix(in srgb, var(--color-surface) 18%, transparent); }
+.app-shell .topbar { height: 82px; padding: 0 48px; background: color-mix(in srgb, var(--color-surface) 94%, transparent); box-shadow: 0 1px 0 var(--color-border); }
+.app-shell .topbar h1 { font-size: 20px; }
+.app-shell .content { padding: 36px 48px 64px; }
+.app-shell .progress-wrap { border-radius: 18px; padding: 22px 26px 17px; box-shadow: var(--shadow-card); }
+.app-shell .card { border-radius: 16px; padding: 22px; box-shadow: 0 8px 26px rgba(16, 43, 75, .045); }
+.app-shell .page-heading h2 { font-size: 28px; }
+.app-shell .button { border-radius: 10px; min-height: 40px; }
+.app-shell .sidebar-foot { border-top-color: color-mix(in srgb, var(--color-surface) 13%, transparent); }
+.system-shell > .sidebar { box-shadow: 14px 0 36px rgba(16, 43, 75, 0.08); }
+.system-shell .topbar { box-shadow: 0 1px 0 var(--color-border); }
+
 .import-stack { display: grid; gap: 18px; }
 .import-controls { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 14px; }
 .import-controls label, .mapping-grid label { display: grid; gap: 6px; color: var(--muted); font-size: 11px; font-weight: 700; }

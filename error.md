@@ -128,3 +128,50 @@
 - 증상: `git add`/`git commit` 실행 시 `.git/index.lock: Permission denied` 발생.
 - 확인: 잔여 `index.lock` 파일과 실행 중인 Git 프로세스는 없었음.
 - 조치: 저장소 메타데이터 쓰기 권한이 필요한 작업이므로 승인된 권한으로 커밋을 재시도.
+## 2026-08-28 — Python 테스트 런처 미설치
+
+- 증상: `py -m unittest ...` 실행 시 `py is not recognized`.
+- 원인: 현재 개발 환경 PATH에 Python 런처가 설치되어 있지 않음.
+- 조치: Node 테스트와 Next.js 빌드는 별도로 수행하고, Python 서비스 검증은 Python 설치 후 `python -m unittest discover -s python_forecast_service/tests -v`로 실행.
+## 2026-08-28 — Python 실행 파일 미설치 확인
+
+- 증상: `python`, `py`, `winget` 명령이 모두 인식되지 않음.
+- 해결: python.org의 Windows 설치 프로그램으로 Python을 설치하고 설치 화면에서 `Add python.exe to PATH`를 선택.
+## 2026-08-28 — Python은 인식되지만 pip 명령 미인식
+
+- 증상: `python --version`은 실행되지만 `pip --version`은 인식되지 않음.
+- 원인: Python Scripts 폴더가 PATH에 포함되지 않은 상태.
+- 해결: `python -m pip` 형식으로 실행하면 pip PATH 설정 없이 동일하게 사용할 수 있음. pip 모듈이 없으면 `python -m ensurepip --upgrade` 실행.
+## 2026-08-28 — PowerShell 가상환경 활성화 경로 오타
+
+- 증상: `..venv\\Scripts\\Activate.ps1`를 찾을 수 없음.
+- 원인: 현재 폴더의 하위 경로는 `..venv`가 아니라 ` .\\.venv`이며, PowerShell 상대 경로는 점 하나와 백슬래시를 사용함.
+- 해결: ` .\\.venv\\Scripts\\Activate.ps1`가 아닌 공백 없는 ` .\\.venv\\Scripts\\Activate.ps1`를 실행.
+## 2026-08-28 — 가상환경 활성화 오타 반복
+
+- 증상: `..venv\\Scripts\\Activate.ps1` 명령을 반복 입력해 파일을 찾지 못함.
+- 해결: 활성화하지 않고 `.venv\\Scripts\\python.exe -m pip`를 직접 사용하거나, 정확히 ` .\\.venv\\Scripts\\Activate.ps1` 형식으로 실행.
+## 2026-08-28 — `.venv` 폴더가 생성되지 않은 상태
+
+- 증상: 활성화 명령을 복사해도 `.venv\\Scripts\\Activate.ps1`를 찾지 못함.
+- 확인: `python_forecast_service` 폴더에 `.venv`가 존재하지 않음.
+- 해결: 서비스 폴더에서 `python -m venv .venv`를 먼저 실행하고 `.venv\\Scripts`가 생성됐는지 확인한 뒤 설치 진행.
+## 2026-08-28 — Microsoft Store Python 별칭으로 인한 venv 미생성
+
+- 증상: `python -m venv .venv` 후 `.venv` 폴더가 생성되지 않고 `dir .venv\\Scripts`가 실패함.
+- 원인: 실제 Python 설치가 아니라 Windows App Execution Alias가 `python` 명령을 가로채는 상태로 추정됨.
+- 해결: python.org의 `Windows installer (64-bit)`를 설치하고 `Add python.exe to PATH`를 체크한 뒤 새 PowerShell에서 `python --version`이 실제 버전을 출력하는지 확인.
+## 2026-08-28 — Python 설치 후에도 Store 별칭 실행
+
+- 증상: `python --version` 결과가 버전 없이 `Python`만 출력됨.
+- 원인: Windows 설정의 `python.exe`/`python3.exe` App execution alias가 실제 설치 경로보다 먼저 실행됨.
+- 해결: Settings → Apps → Advanced app settings → App execution aliases에서 Python 별칭을 끄고, 새 PowerShell에서 실제 설치 경로를 확인.
+## 2026-08-28 — 앱 실행 별칭 목록에 Python 항목 없음
+
+- 증상: 설정의 App execution aliases에 `python.exe`/`python3.exe` 항목이 없음.
+- 다음 진단: `Get-Command python -All` 및 표준 설치 경로 검색으로 실제 실행 파일과 PATH 등록 상태를 확인.
+## 2026-08-28 — Python 재설치 후에도 WindowsApps 경로 우선
+
+- 증상: 재설치 후에도 `where.exe python`이 `WindowsApps\\python.exe`만 반환.
+- 판단: 실제 설치 파일이 PATH에 등록되지 않았거나 설치 위치가 표준 경로와 다름.
+- 다음 조치: 표준 Program Files 및 LocalAppData에서 실제 `python.exe`를 검색하고, 발견된 경로를 직접 실행해 설치 상태를 확인.
