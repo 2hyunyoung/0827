@@ -201,3 +201,50 @@
 - 증상: 최종 `select` 구문에서 `syntax error at or near "select"` 발생.
 - 원인: SQL Editor에 일부 구문만 복사되거나 CTE 이름 `required`가 환경에 따라 최종 SELECT 경계에서 모호하게 해석될 수 있었음.
 - 해결: CTE 이름을 `requirements`로 명확히 변경하고, 최종 Risk 상태는 이미 `base`에서 조회한 `risk_status`를 직접 사용하도록 수정함.
+## 2026-09-04 — 대용량 실데이터 적재 SQL 실행 한도
+
+- 증상: `02-data-01` 전체 SQL을 Supabase SQL Editor에 한 번에 붙여넣거나 실행하기 어려움.
+- 원인: 파일이 약 2MB이고 대형 `INSERT` 문 56개(총 27,645행)를 하나의 입력으로 묶어 SQL Editor 입력/실행 한도에 걸릴 수 있음.
+- 해결: 완결된 `INSERT` 문 경계를 보존한 `sql/02-data-01-parts/part-01.sql`부터 `part-09.sql`까지의 순차 실행본으로 분할함. `README.md`의 실행 순서를 따름.
+
+## 2026-09-04 — part-06 중복 키 오류
+
+- 증상: `part-06.sql` 실행 시 `duplicate key value violates unique constraint "dim_item_pkey"`, `item_code=173K47049` 발생.
+- 확인: 원본 SQL과 분할본에서 `173K47049`는 한 번만 존재함. 따라서 분할 중복이 아니라 해당 행이 이전 실행 또는 기존 데이터로 이미 DB에 적재된 상태임.
+- 해결: 모든 분할 INSERT에 `ON CONFLICT (item_code) DO NOTHING`을 추가하고, `dim_model`에는 `ON CONFLICT (model_key) DO NOTHING`을 추가함. 실패한 파트부터 재실행하면 기존 행은 건너뛰고 누락된 행만 적재됨.
+
+## 2026-09-04 — part-06 ON CONFLICT 구문 인식 오류
+
+- 증상: `syntax error at or near "'179K40778'"`가 발생하며 마지막 튜플 뒤의 충돌 처리 절에서 실행 실패.
+- 원인: SQL Editor에서 컬럼 지정형 충돌 절을 포함한 대형 다중 행 INSERT의 구문을 정상 인식하지 못한 것으로 판단됨.
+- 해결: 충돌 대상 컬럼을 생략한 PostgreSQL 표준형 `ON CONFLICT DO NOTHING`으로 변경하고, INSERT 마지막 튜플 다음 줄에 배치함.
+
+## 2026-09-04 — part-06 대형 VALUES 블록 구문 오류 재발
+
+- 증상: `part-06.sql`에서 `179K40778` 행 부근에 동일한 `42601` 구문 오류가 반복됨.
+- 원인: SQL Editor가 500행 단위의 대형 다중 행 `VALUES` 블록을 처리하는 중 구문 오류 위치를 잘못 해석하는 것으로 판단됨.
+- 해결: 전체 분할본의 INSERT를 최대 100행 단위로 재분할하고, 각 블록 마지막에 `ON CONFLICT DO NOTHING`을 유지함. `part-06.sql`부터 다시 실행함.
+
+## 2026-09-04 — 02-data-02 part-03 재실행 중복 키 오류
+
+- 증상: `part-03.sql` 실행 시 `duplicate key value violates unique constraint "dim_item_pkey"`, `item_code=537K13576` 발생.
+- 확인: `537K13576`은 02-data-02 원본에 한 번만 존재하며 part-03의 첫 행임. part-03이 이전에 일부 실행되어 해당 행이 이미 적재된 상태임.
+- 해결: 02-data-02의 INSERT를 최대 100행 단위로 재분할하고 각 블록에 `ON CONFLICT DO NOTHING`을 적용함. 원본과 동일한 28,000행이 유지되는 것을 확인함.
+
+## 2026-09-04 — 02-data-02 part-03 중복 키 오류
+
+- 증상: `part-03.sql` 실행 시 `duplicate key value violates unique constraint "dim_item_pkey"`, `item_code=537K13576` 발생.
+- 확인: 원본 SQL과 02-data-02 분할본에서 `537K13576`은 한 번만 존재하므로, part-03을 이전에 일부 실행해 해당 행이 이미 적재된 상태임.
+- 해결: 02-data-02의 모든 INSERT를 최대 100행 단위로 재분할하고 `ON CONFLICT DO NOTHING`을 추가함. part-03부터 재실행하면 기존 행은 건너뛰고 누락된 행만 적재됨.
+
+## 2026-09-04 — PowerShell npm 실행 정책 오류 재발
+
+- 증상: `npm test` 실행 시 `C:\Program Files\nodejs\npm.ps1`을 로드할 수 없고 `PSSecurityException` 발생.
+- 원인: PowerShell 실행 정책이 `.ps1` 스크립트 실행을 차단함. npm 또는 프로젝트 오류가 아님.
+- 해결: 실행 정책을 변경하지 않고 `npm.cmd test`를 사용함. TypeScript 검사는 `npx.cmd tsc --noEmit`으로 실행함.
+
+## 2026-09-04 — Git 커밋·푸시 권한 및 연결 오류
+
+- 증상: `git add`/`git commit`에서 `.git/index.lock: Permission denied`, `git push`에서 GitHub `443` 연결 실패가 발생함.
+- 확인: `.git/index.lock` 잔여 파일과 실행 중인 Git 프로세스는 없음.
+- 조치: 저장소 메타데이터 쓰기와 외부 GitHub 연결 권한이 필요한 작업으로 확인되어 승인된 권한으로 커밋·푸시를 재시도함.

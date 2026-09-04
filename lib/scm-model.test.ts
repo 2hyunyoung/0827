@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizeForecastSettings, normalizeLeadtimeGap } from './scm-model.ts';
+import { normalizeBomRequirement, normalizeDemandProfileRt, normalizeForecastSettings, normalizeLeadtimeGap, normalizeOlAccuracyFy, normalizeShipmentTrend } from './scm-model.ts';
 
 test('normalizes analytics leadtime rows into the screen model', () => {
   const result = normalizeLeadtimeGap({
@@ -66,4 +66,24 @@ test('keeps forecast boundaries configurable and preserves unavailable dates', (
   assert.equal(result.testEnd, null);
   assert.equal(result.trainWindowOk, false);
   assert.equal(result.granularity, 'DAILY');
+});
+
+test('normalizes real-data shipment trend values and keeps missing values null', () => {
+  const result = normalizeShipmentTrend({ item_code: '602K02693', shipment_count: 40, shipped_qty: '779.0', received_qty: 772.3, reason_code: null });
+  assert.equal(result.itemCode, '602K02693');
+  assert.equal(result.shipmentCount, 40);
+  assert.equal(result.shippedQty, 779);
+  assert.equal(result.receivedQty, 772.3);
+  assert.equal(result.reasonCode, null);
+  assert.equal(result.period, null);
+});
+
+test('normalizes real-data demand, OL accuracy, and BOM rows', () => {
+  assert.equal(normalizeDemandProfileRt({ item_code: '602K02693', demand_qty: null, reason_code: 'NO_USAGE' }).demandQty, null);
+  assert.deepEqual(normalizeOlAccuracyFy({ fy: 'FY25', sales_wape: 0.664, scm_bias: 0.367 }), {
+    fiscalYear: 'FY25', modelBase: null, salesWape: 0.664, scmWape: null, salesBias: null, scmBias: 0.367, reasonCode: null,
+  });
+  assert.deepEqual(normalizeBomRequirement({ model_base: 'A3', item_code: 'PART-1', qty: 2 }), {
+    modelBase: 'A3', itemCode: 'PART-1', itemName: null, bomGroup: null, requirementQty: 2, attachmentRate: null, reasonCode: null,
+  });
 });

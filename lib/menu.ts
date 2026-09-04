@@ -1,7 +1,11 @@
-import { BarChart3, Boxes, Gauge, LineChart, Settings2, ShoppingCart, type LucideIcon } from 'lucide-react';
+import { BarChart3, Bot, Boxes, Gauge, LineChart, Settings2, ShoppingCart, type LucideIcon } from 'lucide-react';
 
 export type MenuRole = 'USER' | 'ADMIN';
 export type MenuItem = { id: string; label: string; href: string; icon: LucideIcon; roles: MenuRole[] };
+
+export const USER_MENU: MenuItem[] = [
+  { id: 'agent', label: 'AI Agent', href: '/agent', icon: Bot, roles: ['USER', 'ADMIN'] },
+];
 
 export const workflowMenu: MenuItem[] = [
   { id: 'dashboard', label: '전체 현황', href: '/', icon: Gauge, roles: ['USER', 'ADMIN'] },
@@ -30,5 +34,5 @@ export const adminMenu: MenuItem[] = [
 ];
 
 export function menuFor(role: MenuRole) {
-  return [...workflowMenu, ...analysisMenu, ...adminMenu].filter((item) => item.roles.includes(role));
+  return [...USER_MENU, ...workflowMenu, ...analysisMenu, ...adminMenu].filter((item) => item.roles.includes(role));
 }
